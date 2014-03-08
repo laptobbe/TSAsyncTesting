@@ -75,6 +75,24 @@
     XCTAssertFalse(hasRun);
 }
 
+- (void)testSignalWhen {
+    NSBlockOperation *blockOperation = [NSBlockOperation blockOperationWithBlock:^{
+        for (int j = 0; j < 1000; j++);
+    }];
+
+    XCTAssertFalse(blockOperation.isFinished);
+
+    NSOperationQueue *queue = [[NSOperationQueue alloc] init];
+    [queue addOperation:blockOperation];
+
+    [TSAsyncTesting signalWhen:^{
+        return blockOperation.isFinished;
+    }];
+
+    [TSAsyncTesting wait];
+    XCTAssertTrue(blockOperation.isFinished);
+}
+
 - (void)testSignalThrowsInternalInconsistencyErrorIfNoWait {
     XCTAssertThrowsSpecificNamed([TSAsyncTesting signal], NSException, NSInternalInconsistencyException);
 }

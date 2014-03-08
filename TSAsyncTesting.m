@@ -18,8 +18,12 @@ static dispatch_semaphore_t semaphore = nil;
 }
 
 + (void)testOnBackgroundQueueTimeOut:(NSTimeInterval)time action:(dispatch_block_t)block {
-    dispatch_queue_t backgroundQueue = dispatch_queue_create("Test background thread", DISPATCH_QUEUE_SERIAL);
+    dispatch_queue_t backgroundQueue = [self createBackgroundQueue];
     [self testWithTimeOut:time onQueue:backgroundQueue action:block];
+}
+
++ (dispatch_queue_t)createBackgroundQueue {
+    return dispatch_queue_create("Test background thread", DISPATCH_QUEUE_SERIAL);
 }
 
 + (void)testWithTimeOut:(NSTimeInterval)time onQueue:(dispatch_queue_t)queue action:(dispatch_block_t)action {
@@ -64,5 +68,10 @@ static dispatch_semaphore_t semaphore = nil;
     for(;;);
 }
 
-
++ (void)signalWhen:(BOOL (^)())block {
+    dispatch_async([self createBackgroundQueue], ^{
+        while (!block());
+        [TSAsyncTesting signal];
+    });
+}
 @end

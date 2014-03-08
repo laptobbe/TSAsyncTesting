@@ -23,4 +23,6 @@ extern NSString *const TSTestTimeoutException;
 + (void)waitWithTimeOut:(NSTimeInterval)timeOut;
 
 + (void)blockThread;
+
++ (void)signalWhen:(BOOL (^)())block;
 @end
