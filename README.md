@@ -1,4 +1,6 @@
-#About
+TSAsyncTesting
+============
+
 TSAsyncTesting is a helper for testing async code. 
 
 * It simplifies the process of waiting for async callbacks. 
