@@ -46,9 +46,14 @@
 - (void)testOnOwnQueue {
     __block BOOL hasRun = NO;
     dispatch_queue_t queue = dispatch_queue_create("Test queue", DISPATCH_QUEUE_SERIAL);
-    [TSAsyncTesting testWithTimeOut:2 onQueue:queue action:^{
-        hasRun = YES;
-    }];
+    [TSAsyncTesting testWithTimeOut:2
+                            onQueue:queue
+                             action:^{
+                                 hasRun = YES;
+                             }
+                         signalWhen:^BOOL {
+                             return YES;
+                         }];
     XCTAssertTrue(hasRun);
 }
 
@@ -95,6 +100,25 @@
 
 - (void)testSignalThrowsInternalInconsistencyErrorIfNoWait {
     XCTAssertThrowsSpecificNamed([TSAsyncTesting signal], NSException, NSInternalInconsistencyException);
+}
+
+- (void)testOnBackgroundQueueCustomSignaling {
+    __block long count = 0;
+    dispatch_queue_t queue = dispatch_queue_create("Test queue", DISPATCH_QUEUE_SERIAL);
+    dispatch_async(queue, ^{
+        while (count < 10000000000000000) {
+            count++;
+        }
+    });
+
+    [TSAsyncTesting testOnBackgroundQueueTimeOut:10
+                                          action:^{
+                                              //Some action then start waiting for external state change
+                                          }
+                                      signalWhen:^BOOL {
+                                          return count > 100000000;
+                                      }];
+    XCTAssertTrue(count > 100000000);
 }
 
 @end
