@@ -25,7 +25,7 @@
     [super tearDown];
 }
 
-- (void)testPerformObBackgroundThread {
+- (void)testPerformOnBackgroundThread {
     __block BOOL hasRun = NO;
     [TSAsyncTesting testOnBackgroundQueue:^{
         hasRun = YES;
@@ -119,6 +119,44 @@
                                           return count > 100000000;
                                       }];
     XCTAssertTrue(count > 100000000);
+}
+
+- (void)testCallbackOnMainQueue {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [TSAsyncTesting signal];
+        });
+    });
+
+    [TSAsyncTesting waitWithTimeOut:2];
+}
+
+- (void)testCallbackOnBackgroundQueue {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [TSAsyncTesting signal];
+        });
+    });
+    [TSAsyncTesting waitWithTimeOut:2];
+}
+
+- (void)testCallbackWithDispatchSyncOnMain {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [TSAsyncTesting signal];
+        });
+    });
+    [TSAsyncTesting waitWithTimeOut:2];
+}
+
+- (void)testWithDispatchThread {
+    [NSThread detachNewThreadSelector:@selector(backgroundMethod) toTarget:self withObject:nil];
+    [TSAsyncTesting waitWithTimeOut:2];
+}
+
+- (void)backgroundMethod {
+    sleep(1);
+    [TSAsyncTesting signal];
 }
 
 @end
